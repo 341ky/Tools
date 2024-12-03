@@ -20,6 +20,7 @@ echo  ^| [6] - Restore System          ^|
 echo  ^| [7] - Exit                    ^|
 echo  +-------------------------------+
 echo.
+echo Version 0.0.1
 set /p choice="Enter Command (1-7): "
 
 if "%choice%"=="1" goto Setup
