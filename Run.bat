@@ -37,7 +37,7 @@ goto menu
 :Setup
 setlocal enabledelayedexpansion
 cls
-echo Status: === Setup Section ===
+echo === Setup Section ===
 
 :: Create System Restore Point
 
@@ -522,8 +522,11 @@ if %errorlevel% == 0 (
 ) else (
     echo Status: Visual C++ 2015-2022 Redistributable is not installed.
     echo Status: Downloading and installing
-    powershell -Command "Invoke-WebRequest -Uri 'https://aka.ms/vs/17/release/vc_redist.x64.exe' -OutFile '%temp%\vc_redist.x64.exe'"
-    %temp%\vc_redist.x64.exe /install /quiet /norestart
+    set "download=https://github.com/abbodi1406/vcredist/releases/download/v0.85.0/VisualCppRedist_AIO_x86_x64.exe"
+
+    powershell -Command "(New-Object Net.WebClient).DownloadFile('%download%', '%temp%\VisualCPP.exe')" >nul 2>&1
+
+    %temp%\VisualCPP.exe /install /quiet /norestart
     del "%temp%\vc_redist.x64.exe" /f /q
     timeout /t 2 >nul
 )
@@ -716,7 +719,7 @@ goto menu
 cls
 
 :: Downloads Cleaning
-echo Status: === Downloads Cleanup ===
+echo === Downloads Cleanup ===
 set /p cleanDownloads="Do you want to clean downloads? [Y/N]: "
 if /i "%cleanDownloads%"=="Y" (
     echo Status: Cleaning Downloads folder
@@ -730,7 +733,7 @@ cls
 
 :: Network Cleaning 
 @echo off
-echo Status: === Network Cleanup ===
+echo === Network Cleanup ===
 set /p cleanNetwork="Do you want to clean the network? [Y/N]: "
 if /i "%cleanNetwork%"=="Y" (
     echo Status: Cleaning Network
@@ -773,7 +776,7 @@ if /i "%cleanNetwork%"=="Y" (
 cls
 
 :: Taskbar and Start Menu Cleanup
-echo Status: === Taskbar and Start Menu Cleanup ===
+echo === Taskbar and Start Menu Cleanup ===
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v ShowTaskViewButton /t REG_DWORD /d 0 /f
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Search" /v SearchboxTaskbarMode /t REG_DWORD /d 0 /f
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsSearch" /v AllowCortana /t REG_DWORD /d 0 /f
@@ -785,7 +788,7 @@ reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v St
 cls
 
 :: Browser Cleanup
-echo Status: === Browser Cleanup ===
+echo === Browser Cleanup ===
 echo Status: Disabling Browser Hardware Acceleration
 reg add "HKCU\Software\Google\Chrome" /v "HardwareAccelerationModeEnabled" /t REG_DWORD /d "0" /f >nul 2>&1
 reg add "HKCU\Software\Google\Chrome\WidevineCdm" /v "Hardware Accelerated Video Decode" /t REG_DWORD /d "0" /f >nul 2>&1
@@ -798,22 +801,8 @@ reg add "HKCU\Software\Opera Software\Opera Stable\VideoConfig" /v "HardwareAcce
 reg add "HKCU\Software\BraveSoftware\Brave-Browser" /v "HardwareAccelerationModeEnabled" /t REG_DWORD /d "0" /f >nul 2>&1
 reg add "HKCU\Software\BraveSoftware\Brave-Browser\WidevineCdm" /v "Hardware Accelerated Video Decode" /t REG_DWORD /d "0" /f >nul 2>&1
 
-echo Status: Cleaning Browser Caches
-del "%LocalAppData%\Microsoft\Edge\User Data\Default\Cache\*" /s /f /q
-del "%LocalAppData%\Google\Chrome\User Data\Default\Cache\*" /s /f /q
-del "%LocalAppData%\BraveSoftware\Brave-Browser\User Data\Default\Cache\*" /s /f /q
-del "%LocalAppData%\Opera Software\Opera GX Stable\Cache\*" /s /f /q
-
-echo Status: Cleaning Browser History
-del /s /f /q "%LocalAppData%\Google\Chrome\User Data\Default\History*" >nul 2>&1
-del /s /f /q "%AppData%\Mozilla\Firefox\Profiles\*.default\downloads.sqlite" >nul 2>&1
-del /s /f /q "%LocalAppData%\Microsoft\Edge\User Data\Default\History*" >nul 2>&1
-del /s /f /q "%AppData%\Opera Software\Opera Stable\History*" >nul 2>&1
-del /s /f /q "%LocalAppData%\BraveSoftware\Brave-Browser\User Data\Default\History*" >nul 2>&1
-cls
-
 :: System Cleanup
-echo Status: === System Cleanup ===
+echo === System Cleanup ===
 echo Status: Cleaning Device Manager
 powershell -Command "& {Get-PnpDevice -Status Unknown | ForEach-Object { & pnputil /remove-device $_.InstanceId }}"
 powershell -Command "& {Get-PnpDevice -Status Error | ForEach-Object { & pnputil /remove-device $_.InstanceId }}"
@@ -847,25 +836,18 @@ cleanmgr /sageset:1 >nul 2>&1
 cls
 
 :: Cache and Temp Files
-echo Status: === Cache and Temp Cleanup ===
-echo Status: Cleaning Application Caches
-for /d %%D in ("%LocalAppData%\*", "%AppData%\*") do (
-    if exist "%%D\Cache" ( del /s /q "%%D\Cache\*.*" 2>nul )
-    if exist "%%D\Code Cache" ( del /s /q "%%D\Code Cache\*.*" 2>nul )
-    if exist "%%D\GPUCache" ( del /s /q "%%D\GPUCache\*.*" 2>nul )
-)
+echo === Cache and Temp Cleanup ===
 
 echo Status: Cleaning Windows Caches
 del /s /f /q "%LocalAppData%\Microsoft\Windows\INetCache\*"
 del /s /f /q "%LocalAppData%\Microsoft\Windows\WER\*"
-del /s /f /q "%LocalAppData%\Microsoft\Windows\Explorer\thumbcache_*.db"
 del /s /f /q "%temp%\*"
 rd /s /q "%LocalAppData%\Temp"
 rd /s /q "%WinDir%\Temp"
 cls
 
 :: UI Cleanup
-echo Status: === UI Cleanup ===
+echo === UI Cleanup ===
 echo Status: Clearing Quick Access History
 del /f /q "%APPDATA%\Microsoft\Windows\Recent\*"
 del /f /q "%APPDATA%\Microsoft\Windows\Recent\AutomaticDestinations\*"
@@ -1140,7 +1122,7 @@ goto menu
 
 :SystemRestore
 cls
-echo Status: === System Restore Process ===
+echo === System Restore Process ===
 
 :: Create System Restore Point
 echo Status: Creating restore point...
@@ -1170,10 +1152,6 @@ reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v Enab
 echo Status: Restoring notifications...
 reg delete "HKCU\Software\Policies\Microsoft\Windows\Explorer" /v DisableNotificationCenter /f >nul 2>&1
 reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\PushNotifications" /v ToastEnabled /f >nul 2>&1
-
-:: Restore Microsoft Apps
-echo Status: Restoring Microsoft apps...
-powershell -Command "Get-AppxPackage -AllUsers | ForEach-Object {Add-AppxPackage -DisableDevelopmentMode -Register '$($_.InstallLocation)\AppXManifest.xml'}" >nul 2>&1
 
 :: Restore Network Settings
 echo Status: Restoring network settings...
